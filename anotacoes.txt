@@ -1,0 +1,9 @@
+Caso tenha erro ao parar uma sessão bluetooth:
+
+Va ao arquivo /node_modules/react-native-ble-plx/android/src/main/java/com/bleplx/BlePlxModule.java
+
+Na linha 791 altere
+safePromise.reject(null, errorConverter.toJs(error));
+
+Para
+safePromise.reject(error.errorCode.name(), errorConverter.toJs(error));
