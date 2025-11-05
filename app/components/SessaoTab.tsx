@@ -1,4 +1,4 @@
-import { Activity, Clock, Play, Square } from 'lucide-react-native';
+import { Activity, Clock, Eye, Play, Square } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Amostra from '../model/Amostra';
@@ -9,23 +9,17 @@ interface SessionControlProps {
     isActive: boolean;
     onStart: () => void;
     onStop: () => void;
+    duration: number;
+    watchable: boolean;
+    isWatching: boolean;
+    onWatchStart: () => void;
+    onWatchStop: () => void;
     sessionData: Amostra[];
 }
 
-export function SessaoTab({ isActive, onStart, onStop, sessionData }: SessionControlProps) {
-    const [duration, setDuration] = useState(0);
+export function SessaoTab({ isActive, onStart, onStop, duration, sessionData, watchable, isWatching, onWatchStart, onWatchStop }: SessionControlProps) {
     const { theme } = useTheme();
-    useEffect(() => {
-        let interval: any;
-        if (isActive) {
-            interval = setInterval(() => {
-                setDuration(prev => prev + 1);
-            }, 1000);
-        } else {
-            setDuration(0);
-        }
-        return () => clearInterval(interval);
-    }, [isActive]);
+    
 
     const formatDuration = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -40,20 +34,20 @@ export function SessaoTab({ isActive, onStart, onStop, sessionData }: SessionCon
             <Card>
                 <CardHeader>
                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                        <View style={{ flex: 1, flexShrink: 1}}>
+                        <View style={{ flex: 1, flexShrink: 1 }}>
                             <CardTitle>Controle de Sessão</CardTitle>
                             <CardDescription style={{ flexShrink: 1, fontSize: 14, color: theme.textGray }} >
                                 Inicie uma nova sessão para começar a coletar dados dos sensores
                             </CardDescription>
                         </View>
-                        <View style={{ padding: 8, borderRadius: 4, backgroundColor: isActive ?  theme.text : theme.barGray , flexDirection: "row", alignItems: "center", columnGap: 4 }}>
+                        <View style={{ padding: 8, borderRadius: 4, backgroundColor: isActive ? theme.text : theme.barGray, flexDirection: "row", alignItems: "center", columnGap: 4 }}>
                             {isActive ? (
                                 <>
                                     <Activity color={theme.background} />
-                                    <Text style={{color: theme.background}}>Ativa</Text>
+                                    <Text style={{ color: theme.background }}>Ativa</Text>
                                 </>
                             ) : (
-                                <Text style={{color: theme.text}}>Inativa</Text>
+                                <Text style={{ color: theme.text }}>Inativa</Text>
                             )}
                         </View>
                     </View>
@@ -68,21 +62,31 @@ export function SessaoTab({ isActive, onStart, onStop, sessionData }: SessionCon
                         <View style={{ flexDirection: "row", columnGap: 16, justifyContent: "center" }}>
                             <TouchableOpacity
                                 onPress={onStart}
-                                disabled={isActive}
-                                style={{ padding: 8, backgroundColor: isActive ? theme.green200 : theme.green700, borderRadius: 8, flexDirection: "row", columnGap: 8, alignItems: "center"}}
+                                disabled={isActive || isWatching}
+                                style={{ padding: 8, backgroundColor: isActive || isWatching ? theme.green200 : theme.green700, borderRadius: 8, flexDirection: "row", columnGap: 8, alignItems: "center" }}
                             >
-                                <Play color="white"/>
-                                <Text style={{color: "white"}}>Iniciar Sessão</Text>
+                                <Play color="white" />
+                                <Text style={{ color: "white" }}>Iniciar Sessão</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 onPress={onStop}
                                 disabled={!isActive}
-                                style={{ padding: 8, backgroundColor: isActive ? theme.red700 : theme.red200, borderRadius: 8, flexDirection: "row", columnGap: 8, alignItems: "center"}}
+                                style={{ padding: 8, backgroundColor: isActive ? theme.red700 : theme.red200, borderRadius: 8, flexDirection: "row", columnGap: 8, alignItems: "center" }}
                             >
-                                <Square color="white"/>
-                                <Text style={{color: "white"}}>Parar Sessão</Text>
+                                <Square color="white" />
+                                <Text style={{ color: "white" }}>Parar Sessão</Text>
                             </TouchableOpacity>
                         </View>
+                        {watchable ? <View style={{ justifyContent: "center" }}>
+                            <TouchableOpacity
+                                onPress={isWatching ? onWatchStop : onWatchStart}
+                                disabled={isActive || !watchable}
+                                style={{ padding: 8, backgroundColor: watchable ? theme.text : theme.gray300, borderRadius: 8, flexDirection: "row", columnGap: 8, alignItems: "center" }}
+                            >
+                                {isWatching ? <Square color={theme.background} /> : <Eye color={theme.background} />}
+                                <Text style={{ color: theme.background }}>{isWatching ? "Parar de assistir" : "Assistir Sessão"}</Text>
+                            </TouchableOpacity>
+                        </View> : null}
                     </View>
                 </CardContent>
             </Card>
@@ -98,9 +102,9 @@ export function SessaoTab({ isActive, onStart, onStop, sessionData }: SessionCon
                         <View>
                             <Text style={{ color: theme.textGray, marginBottom: 8 }}>Calcanhar</Text>
                             <View style={{ flexDirection: "row", columnGap: 16 }} >
-                                <View style={{ flex: 1, backgroundColor: theme.blue50, borderRadius: 8, alignItems: "center", borderWidth: 2, borderColor: theme.blue200, paddingVertical: 20}}>
-                                    <Text style={{color: theme.blue600}} >Interno</Text>
-                                    <Text style={{color: theme.blue700, fontSize: 18}} >
+                                <View style={{ flex: 1, backgroundColor: theme.blue50, borderRadius: 8, alignItems: "center", borderWidth: 2, borderColor: theme.blue200, paddingVertical: 20 }}>
+                                    <Text style={{ color: theme.blue600 }} >Interno</Text>
+                                    <Text style={{ color: theme.blue700, fontSize: 18 }} >
                                         {latestData ? latestData.s2.toFixed(1) : '--'}
                                     </Text>
                                 </View>

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const urlDefault = 'http://192.168.7.9:8080';
+const urlDefault = 'http://192.168.7.10:8080';
 const enderecoRest = {
     url: urlDefault
 }

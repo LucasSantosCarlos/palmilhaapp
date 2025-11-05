@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer';
 import { Activity, BarChart3, Footprints } from 'lucide-react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { BleManager } from 'react-native-ble-plx';
 import { SessaoTab } from '../components/SessaoTab';
@@ -9,6 +9,7 @@ import Sessao from '../model/Sessao';
 import { useTheme } from '../provider/ThemeProvider';
 import SessaoService from '../service/SessaoService';
 import { requestPermissions } from '../util/PermissaoUtil';
+import MapaCalorTab from '../components/MapaCalorTab';
 
 let connectedDevice: any = null;
 let subscription: any = null;
@@ -18,13 +19,16 @@ const sessaoService = new SessaoService();
 export default function SessaoPage() {
     const { theme } = useTheme();
     const [isSessionActive, setIsSessionActive] = useState(false);
+    const [isWatching, setIsWatching] = useState(false);
+    const [amostrasWatched, setAmostrasWatched] = useState<Amostra[]>([]);
     const [sessao, setSessao] = useState<Sessao>(new Sessao());
+    const [duration, setDuration] = useState(0);
 
     const [tabAtiva, setTabAtiva] = useState<"sessao" | "graficos" | "mapaCalor">('sessao');
 
     const handleSessionStart = async () => {
         setIsSessionActive(true);
-        requestPermissions().then(async granted => {
+        {/*requestPermissions().then(async granted => {
             if (granted) {
                 await start();
             } else {
@@ -32,14 +36,14 @@ export default function SessaoPage() {
             }
         }).catch(error => {
             console.error("Erro ao solicitar permissões:", error);
-        });
+        });*/}
         setSessao(new Sessao());
     };
 
     const handleSessionStop = () => {
         setIsSessionActive(false);
         stopReading();
-        sessaoService.salvar({...sessao, finalizadoEm: new Date()}).then((savedSessao) => {
+        sessaoService.salvar({ ...sessao, finalizadoEm: new Date() }).then((savedSessao) => {
             setSessao(savedSessao);
             console.log(savedSessao)
         }).catch((error) => {
@@ -47,16 +51,46 @@ export default function SessaoPage() {
         });
     };
 
+    useEffect(() => {
+        let interval: any;
+        if (isSessionActive) {
+            interval = setInterval(() => {
+                setDuration(prev => prev + 1);
+            }, 1000);
+        } else {
+            setDuration(0);
+        }
+        return () => clearInterval(interval);
+    }, [isSessionActive]);
 
+    useEffect(() => {
+        let i = 0;
+        const interval = setInterval(() => {
+            if (!isWatching) return
+            if( i >= sessao.amostras.length ) {
+                setIsWatching(false);
+                return;
+            };
+
+            setAmostrasWatched(prev => {
+                if (i >= sessao.amostras.length) return prev;
+                const updatedAmostras = [...prev, sessao.amostras[i]];
+                i++;
+                return updatedAmostras;
+            });
+        }, 500);
+        return () => clearInterval(interval);
+    }, [isWatching])
+
+
+    //Aqui começa a simulação de dados
     const FASES = 4;
-    const DURAÇÃO_FASE_MS = [300, 300, 300, 200];
-
-    /*function gerarAmostraDePasso(): Amostra {
+    function gerarAmostraDePasso(): Amostra {
         // valores base para cada fase
         const intensidade = (ativo: boolean) => ativo ? 60 + Math.random() * 40 : Math.random() * 10;
- 
+
         let s1 = 0, s2 = 0, s3 = 0, s4 = 0, s5 = 0, s6 = 0;
- 
+
         switch (faseAtual) {
             case 0: // calcanhar toca o chão
                 s1 = intensidade(true);
@@ -86,31 +120,31 @@ export default function SessaoPage() {
                 // tudo baixo
                 break;
         }
- 
+
         // próxima fase
         faseAtual = (faseAtual + 1) % FASES;
- 
+
         return {
-            id: 0,
+            id: null,
             sessao: null,
             ts: new Date(),
             s1, s2, s3, s4, s5, s6
         };
     }
- 
+
     useEffect(() => {
         const interval = setInterval(() => {
             if (!isSessionActive) return
- 
+
             const newData = gerarAmostraDePasso();
             setSessao(prev => {
                 const updatedAmostras = [...prev.amostras, newData as Amostra];
                 return { ...prev, amostras: updatedAmostras };
             });
-        }, 100);
+        }, 500);
         return () => clearInterval(interval);
-    }, [isSessionActive])*/
-
+    }, [isSessionActive])
+    //Aqui termina a simulação de dados
 
     const manager = new BleManager();
 
@@ -221,7 +255,7 @@ export default function SessaoPage() {
 
 
     return (
-        <ScrollView style={{ backgroundColor: theme.background, flex: 1 }}>
+        <ScrollView style={{ backgroundColor: theme.background, flex: 1, paddingTop: 16 }}>
             <View style={{ rowGap: 16 }}>
                 <View style={{ alignItems: "center", marginTop: 16 }}>
                     <View style={{ flexDirection: "row", alignItems: "center", columnGap: 12 }} >
@@ -261,16 +295,23 @@ export default function SessaoPage() {
                         isActive={isSessionActive}
                         onStart={handleSessionStart}
                         onStop={handleSessionStop}
-                        sessionData={sessao.amostras}
+                        sessionData={isWatching ? amostrasWatched : sessao.amostras}
+                        duration={duration}
+                        watchable={sessao.finalizadoEm != null}
+                        isWatching={isWatching}
+                        onWatchStart={() => setIsWatching(true)}
+                        onWatchStop={() => setIsWatching(false)}
                     /> : null}
 
                     {/*<TabsContent value="charts">
             <PressureCharts data={sessionData} isActive={isSessionActive} />
-          </TabsContent>
-
-          <TabsContent value="heatmap">
-            <HeatMap data={sessionData} />
           </TabsContent>*/}
+                    {tabAtiva == "mapaCalor" ?
+                        <MapaCalorTab
+                            isActive={isSessionActive}
+                            onStart={handleSessionStart}
+                            onStop={handleSessionStop}
+                            sessionData={isWatching ? amostrasWatched : sessao.amostras} /> : null}
                 </View>
             </View>
             <View style={{ marginTop: 20 }}></View>
