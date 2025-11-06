@@ -1,10 +1,11 @@
+import ListaSessaoPage from "./pages/ListaSessaoPage";
 import SessaoPage from "./pages/SessaoPage";
-import { ThemeProvider } from "./provider/ThemeProvider";
+import { ThemeProvider } from "../src/provider/ThemeProvider";
 
 export default function Index() {
   return (
     <ThemeProvider>
-      <SessaoPage />
+      <ListaSessaoPage />
     </ThemeProvider>
     
   );

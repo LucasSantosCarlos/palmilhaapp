@@ -11,15 +11,16 @@ interface SessionControlProps {
     onStop: () => void;
     duration: number;
     watchable: boolean;
+    watchOnly?: boolean;
     isWatching: boolean;
     onWatchStart: () => void;
     onWatchStop: () => void;
     sessionData: Amostra[];
 }
 
-export function SessaoTab({ isActive, onStart, onStop, duration, sessionData, watchable, isWatching, onWatchStart, onWatchStop }: SessionControlProps) {
+export function SessaoTab({ isActive, onStart, onStop, duration, sessionData, watchable, watchOnly, isWatching, onWatchStart, onWatchStop }: SessionControlProps) {
     const { theme } = useTheme();
-    
+
 
     const formatDuration = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -59,7 +60,7 @@ export function SessaoTab({ isActive, onStart, onStop, duration, sessionData, wa
                             <Text style={{ color: theme.primary, fontSize: 24 }} >{formatDuration(duration)}</Text>
                         </View>
 
-                        <View style={{ flexDirection: "row", columnGap: 16, justifyContent: "center" }}>
+                        {!watchOnly ? <View style={{ flexDirection: "row", columnGap: 16, justifyContent: "center" }}>
                             <TouchableOpacity
                                 onPress={onStart}
                                 disabled={isActive || isWatching}
@@ -76,7 +77,7 @@ export function SessaoTab({ isActive, onStart, onStop, duration, sessionData, wa
                                 <Square color="white" />
                                 <Text style={{ color: "white" }}>Parar Sessão</Text>
                             </TouchableOpacity>
-                        </View>
+                        </View> : null}
                         {watchable ? <View style={{ justifyContent: "center" }}>
                             <TouchableOpacity
                                 onPress={isWatching ? onWatchStop : onWatchStart}

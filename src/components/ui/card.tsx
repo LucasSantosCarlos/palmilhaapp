@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { useTheme } from "@/app/provider/ThemeProvider";
+import { useTheme } from "@/src/provider/ThemeProvider";
 import { Text, TextProps, View, ViewProps } from "react-native";
 
 function Card({ ...props }: ViewProps) {

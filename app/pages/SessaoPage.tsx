@@ -1,15 +1,17 @@
 import { Buffer } from 'buffer';
-import { Activity, BarChart3, Footprints } from 'lucide-react-native';
+import { Activity, ArrowLeft, BarChart3, Footprints, MoveLeft, PlaneLanding } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { BleManager } from 'react-native-ble-plx';
-import { SessaoTab } from '../components/SessaoTab';
-import Amostra from '../model/Amostra';
-import Sessao from '../model/Sessao';
-import { useTheme } from '../provider/ThemeProvider';
-import SessaoService from '../service/SessaoService';
-import { requestPermissions } from '../util/PermissaoUtil';
-import MapaCalorTab from '../components/MapaCalorTab';
+import { SessaoTab } from '../../src/components/SessaoTab';
+import Amostra from '../../src/model/Amostra';
+import Sessao from '../../src/model/Sessao';
+import { useTheme } from '../../src/provider/ThemeProvider';
+import SessaoService from '../../src/service/SessaoService';
+import { requestPermissions } from '../../src/util/PermissaoUtil';
+import MapaCalorTab from '../../src/components/MapaCalorTab';
+import PisadasTab from '../../src/components/PisadasTab';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 let connectedDevice: any = null;
 let subscription: any = null;
@@ -24,7 +26,23 @@ export default function SessaoPage() {
     const [sessao, setSessao] = useState<Sessao>(new Sessao());
     const [duration, setDuration] = useState(0);
 
-    const [tabAtiva, setTabAtiva] = useState<"sessao" | "graficos" | "mapaCalor">('sessao');
+    const { id } = useLocalSearchParams();
+    const router = useRouter();
+
+    const [tabAtiva, setTabAtiva] = useState<"sessao" | "pisada" | "mapaCalor">('sessao');
+
+    useEffect(() => {
+        if (id) {
+            sessaoService.buscar(Number(id)).then((sessaoBuscada) => {
+                if (!sessaoBuscada.amostras) {
+                    sessaoBuscada.amostras = [];
+                }
+                setSessao(sessaoBuscada);
+            }).catch((error) => {
+                console.error("Erro ao buscar sessão:", error);
+            })
+        }
+    }, [id]);
 
     const handleSessionStart = async () => {
         setIsSessionActive(true);
@@ -67,7 +85,7 @@ export default function SessaoPage() {
         let i = 0;
         const interval = setInterval(() => {
             if (!isWatching) return
-            if( i >= sessao.amostras.length ) {
+            if (i >= sessao.amostras.length) {
                 setIsWatching(false);
                 return;
             };
@@ -258,10 +276,16 @@ export default function SessaoPage() {
         <ScrollView style={{ backgroundColor: theme.background, flex: 1, paddingTop: 16 }}>
             <View style={{ rowGap: 16 }}>
                 <View style={{ alignItems: "center", marginTop: 16 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", columnGap: 12 }} >
-                        <Footprints color={theme.primary} size={48} />
-                        <Text style={{ color: theme.blue700, fontSize: 16 }}>Análise de Pressão Plantar</Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", paddingLeft: 8 }}>
+                        <TouchableOpacity onPress={() => { router.push({ pathname: "/pages/ListaSessaoPage" }) }}>
+                            <ArrowLeft color={theme.primary} size={32} />
+                        </TouchableOpacity>
+                        <View style={{ flexDirection: "row", alignItems: "center", columnGap: 12, flex: 1, justifyContent: "center", marginRight: 32 }} >
+                            <Footprints color={theme.primary} size={48} />
+                            <Text style={{ color: theme.blue700, fontSize: 16 }}>Análise de Pressão Plantar</Text>
+                        </View>
                     </View>
+
                     <Text style={{ color: theme.blue500 }}>
                         Monitoramento em tempo real dos sensores de pressão
                     </Text>
@@ -273,9 +297,9 @@ export default function SessaoPage() {
                             <Activity color={theme.text} />
                             <Text style={{ color: theme.text }}>Sessão</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={{ flexDirection: "row", flex: 1, backgroundColor: tabAtiva == "graficos" ? theme.boxBackground : "transparent", borderRadius: 20, alignItems: "center", justifyContent: "center", paddingVertical: 8 }} onPress={() => { setTabAtiva("graficos") }}>
-                            <BarChart3 color={theme.text} />
-                            <Text style={{ color: theme.text }}>Gráficos</Text>
+                        <TouchableOpacity style={{ flexDirection: "row", flex: 1, backgroundColor: tabAtiva == "pisada" ? theme.boxBackground : "transparent", borderRadius: 20, alignItems: "center", justifyContent: "center", paddingVertical: 8 }} onPress={() => { setTabAtiva("pisada") }}>
+                            <PlaneLanding color={theme.text} />
+                            <Text style={{ color: theme.text }}>Pisada</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={{
                             flexDirection: "row",
@@ -292,20 +316,24 @@ export default function SessaoPage() {
                     </View>
 
                     {tabAtiva == "sessao" ? <SessaoTab
+                        watchOnly={id ? true : false}
                         isActive={isSessionActive}
                         onStart={handleSessionStart}
                         onStop={handleSessionStop}
                         sessionData={isWatching ? amostrasWatched : sessao.amostras}
                         duration={duration}
-                        watchable={sessao.finalizadoEm != null}
+                        watchable={sessao.finalizadoEm != null || id ? true : false}
                         isWatching={isWatching}
                         onWatchStart={() => setIsWatching(true)}
                         onWatchStop={() => setIsWatching(false)}
                     /> : null}
 
-                    {/*<TabsContent value="charts">
-            <PressureCharts data={sessionData} isActive={isSessionActive} />
-          </TabsContent>*/}
+                    {tabAtiva == "pisada" ?
+                        <PisadasTab
+                            isActive={isSessionActive}
+                            onStart={handleSessionStart}
+                            onStop={handleSessionStop}
+                            sessionData={isWatching ? amostrasWatched : sessao.amostras} /> : null}
                     {tabAtiva == "mapaCalor" ?
                         <MapaCalorTab
                             isActive={isSessionActive}
