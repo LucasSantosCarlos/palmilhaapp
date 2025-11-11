@@ -1,50 +1,101 @@
-# Welcome to your Expo app 👋
+# 👟 Palmilha App (Expo/React Native)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicativo móvel (Expo) para integração com a **palmilha eletrônica**: recebe dados via BLE/REST do backend, exibe gráficos/leituras e gerencia sessões de coleta.
 
-## Get started
+---
 
-1. Install dependencies
+## ✅ Requisitos
 
-   ```bash
-   npm install
-   ```
+- **Node.js 18** (recomendado usar **nvm** para gerenciar versões)
+- **Android Studio** (SDK + AVD ou dispositivo físico)
+- **Java 17** (para toolchain Android/Gradle, quando necessário)
+- **Expo CLI** (via `npx`)
 
-2. Start the app
+---
 
-   ```bash
-   npx expo start
-   ```
+## 🔽 Passo 1: Baixar o projeto
 
-In the output, you'll find options to open the app in a
+Clone ou baixe o projeto diretamente do repositório oficial:  
+🔗 https://github.com/LucasSantosCarlos/palmilhaapp
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Você pode fazer isso de duas formas:
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- **Via Git (recomendado):**
+  ```bash
+  git clone https://github.com/LucasSantosCarlos/palmilhaapp.git
+  cd palmilhaapp
+  ```
 
-## Get a fresh project
+- **Ou baixando o ZIP**: acesse o link acima e clique em **“Code” → “Download ZIP”** e extraia o projeto.
 
-When you're ready, run:
+---
 
+## 🟢 Passo 2: Instalar o Node 18
+
+Confirme a versão:
 ```bash
-npm run reset-project
+node -v
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Se precisar alternar versões, use o **nvm**:
+```bash
+nvm install 18
+nvm use 18
+```
 
-## Learn more
+---
 
-To learn more about developing your project with Expo, look at the following resources:
+## 📦 Passo 3: Instalar as dependências
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Na pasta raiz do projeto, execute:
+```bash
+npm install
+```
 
-## Join the community
+## 🤖 Passo 4: Instalar e configurar o Android Studio
 
-Join our community of developers creating universal apps.
+Instale o **Android Studio** e configure as **variáveis de ambiente** (Windows/macOS/Linux), adicionando ao **PATH**:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- `ANDROID_HOME`
+- `ANDROID_HOME/tools`
+- `ANDROID_HOME/tools/bin`
+- `ANDROID_HOME/platform-tools`
+
+Documentação oficial: https://developer.android.com/tools/variables?hl=pt-br
+
+> Em um dispositivo físico Android, ative **Depuração USB** e **Instalação via USB** (Opções de desenvolvedor).
+
+---
+
+## 🌐 Passo 5: Apontar o App para o backend local
+
+Verifique seu **IP local** (ex.: `192.168.0.10`).  
+Edite o arquivo:
+```
+src/Api.ts
+```
+Altere o IP configurado (conforme indicado no projeto; ex.: **linha 23**) para o seu IP local, mantendo a porta do backend (ex.: `8080`).
+
+---
+
+## 📲 Passo 6: Conectar um dispositivo ou abrir um emulador
+
+- **Dispositivo físico**: conecte via USB e confirme com `adb devices` se o aparelho aparece como `device`.
+- **Emulador**: abra um AVD no Android Studio (**Device Manager**) antes de rodar os comandos.
+
+---
+
+## ▶️ Passo 7: Rodar o aplicativo (build nativo)
+
+Na raiz do projeto, execute **na ordem**:
+
+```bash
+npx expo prebuild
+npx expo run:android
+```
+
+Isso irá:
+- gerar o projeto nativo (Android) via **prebuild**;
+- compilar e instalar o app no dispositivo/emulador via **run:android**.
+
+---
