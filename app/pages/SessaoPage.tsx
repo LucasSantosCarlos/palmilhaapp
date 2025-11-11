@@ -311,7 +311,7 @@ export default function SessaoPage() {
                             paddingVertical: 8
                         }} onPress={() => { setTabAtiva("mapaCalor") }}>
                             <Footprints color={theme.text} />
-                            <Text style={{ color: theme.text }}>Mapa de Calor</Text>
+                            <Text style={{ color: theme.text }}>Mapa de Pressão</Text>
                         </TouchableOpacity>
                     </View>
 
